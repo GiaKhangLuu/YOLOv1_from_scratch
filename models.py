@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from tensorflow.keras.layers import (Conv2D, Dense, Flatten, BatchNormalization, Activation,
-                                     LeakyReLU, Dropout, InputLayer, MaxPooling2D)
+                                     LeakyReLU, Dropout, InputLayer, MaxPooling2D, Reshape)
 from tensorflow.keras.models import Sequential, Model
 
 # ===================================================
@@ -164,21 +164,25 @@ class YoloV1(Model):
         :param backbone_config: List of configurations of YOLO backbone
         :param name: Model's name
         """
-
         super().__init__(name=name)
+
+        self.S, self.B, self.C = grid_size, num_boxes, num_classes
+
         self.yolo_backbone = YoloBackbone(input_shape=input_shape,
                                           backbone_config=backbone_config)
 
         backbone_output = self.yolo_backbone.output_shape[1:]
 
-        self.yolo_output = YoloOutput(fv_shape=backbone_output, grid_size=grid_size,
-                                      num_boxes=num_boxes, num_classes=num_classes)
+        self.yolo_output = YoloOutput(fv_shape=backbone_output, grid_size=self.S,
+                                      num_boxes=self.B, num_classes=self.C)
 
     def call(self, inputs):
         """
         Call the model
         :param inputs: Input tensor
-        :return : Output tensor
+        :return : Output tensor was reshaped to (batch_size, S, S, (5 * B + C))
         """
+        output = self.yolo_output(self.yolo_backbone(inputs))
+        output = Reshape((self.S, self.S, (5 * self.B + self.C)))(output)
 
-        return self.yolo_output(self.yolo_backbone(inputs))
+        return output
