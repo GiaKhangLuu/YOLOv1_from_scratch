@@ -37,14 +37,14 @@ def convert_cellbox_to_xywh(cellbox, mask):
     # Use w_cell_indices to convert x_offset of a particular grid cell
     # location to x_center
     w_cell_indices = np.array(range(num_w_cells))
-    w_cell_indices = np.broadcast_to(w_cell_indices, x_offset.shape)
+    w_cell_indices = np.broadcast_to(w_cell_indices, x_offset.shape[-2:])
 
     # h_cell_indices: [[0, 0, 0, ...], [1, 1, 1, ...], [2, 2, 2, ...], ....]
     # Use h_cell_indices to convert y_offset of a particular grid cell
     # location to y_center
     h_cell_indices = np.array(range(num_h_cells))
     h_cell_indices = np.repeat(h_cell_indices, 7, 0).reshape(x_offset.shape[-2:])
-    h_cell_indices = np.broadcast_to(h_cell_indices, x_offset.shape)
+    #h_cell_indices = np.broadcast_to(h_cell_indices, x_offset.shape)
 
     x_center = (x_offset + w_cell_indices) / num_w_cells
     y_center = (y_offset + h_cell_indices) / num_h_cells
