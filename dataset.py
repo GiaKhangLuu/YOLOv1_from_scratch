@@ -214,7 +214,7 @@ def _apply_augmentation(image, target, seed=None):
 
 
 def load_dataset_from_df(dataframe, batch_size=32, num_epochs=None, shuffle=False,
-                         input_shape=(418, 418, 3), grid_size=7, augment=False,
+                         input_shape=(448, 448, 3), grid_size=7, augment=False,
                          seed=None):
     """
     Instantiate dataset

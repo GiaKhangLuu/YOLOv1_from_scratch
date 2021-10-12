@@ -2,10 +2,11 @@
 # IMPORT MODULES
 # ===================================================
 
-import tensorflow as tf
 from tensorflow.keras.layers import (Conv2D, Dense, Flatten, BatchNormalization, Activation,
                                      LeakyReLU, Dropout, InputLayer, MaxPooling2D, Reshape)
 from tensorflow.keras.models import Sequential, Model
+from utils import post_process_tensor_output
+
 
 # ===================================================
 #  CONSTANT DEFINITION
@@ -52,15 +53,17 @@ class ConvWithBatchNorm(Conv2D):
         self.batch_norm = BatchNormalization(name=name + '_bn')
         self.activation = Activation(activation, name=name + '_act')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         """
         Call the layer
         :param inputs: Input tensor
+        :param training: Flag to let TF knows if it is a training iteration of not
+                         (this will affect the behavior of batch normalization)
         :return: Output tensor
         """
 
         x = super().call(inputs)
-        return self.activation(self.batch_norm(x))
+        return self.activation(self.batch_norm(x, training=training))
 
 
 class BottleNeckBlock(Sequential):
@@ -80,10 +83,10 @@ class BottleNeckBlock(Sequential):
         for i in range(repetitions):
             model += [ConvWithBatchNorm(filters=filters_1x1, kernel_size=1,
                                         strides=1, padding='valid',
-                                        name='conv_1x1_{}'.format(i + 1), **kwargs)]
+                                        name='{}_conv_1x1_{}'.format(name, i + 1), **kwargs)]
             model += [ConvWithBatchNorm(filters=filters_3x3, kernel_size=3,
                                         strides=1, padding='same',
-                                        name='conv_3x3_{}'.format(i + 1), **kwargs)]
+                                        name='{}_conv_3x3_{}'.format(name, i + 1), **kwargs)]
 
         super().__init__(model, name=name)
 
@@ -176,13 +179,18 @@ class YoloV1(Model):
         self.yolo_output = YoloOutput(fv_shape=backbone_output, grid_size=self.S,
                                       num_boxes=self.B, num_classes=self.C)
 
-    def call(self, inputs):
+    def call(self, inputs, training=False):
         """
         Call the model
         :param inputs: Input tensor
+        :param training: Flag to let TF knows if it is a training iteration
+        or not (this will affect the behavior of output)
         :return : Output tensor was reshaped to (batch_size, S, S, (5 * B + C))
         """
         output = self.yolo_output(self.yolo_backbone(inputs))
         output = Reshape((self.S, self.S, (5 * self.B + self.C)))(output)
 
-        return output
+        if training:
+            return output
+
+        return post_process_tensor_output(output)

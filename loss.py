@@ -3,9 +3,8 @@
 # ===================================================
 
 import tensorflow as tf
-import numpy as np
 from tensorflow.keras.losses import Loss
-from utils import iou
+from utils import iou, convert_cellbox_to_corner_bbox
 
 # ===================================================
 #  CONSTANT DEFINITION
@@ -17,68 +16,6 @@ coord_weight, noobj_weight = 5, 0.5
 # ===================================================
 #  METHOD DEFINITION
 # ===================================================
-
-def convert_cellbox_to_xywh(cellbox, mask):
-    """
-    Convert tensor box (x_offset, y_offset, w, h) to
-    bounding box (x_center, y_center, w, h)
-    :param cellbox: Tensor box (batch_size, grid_size, grid_size, 4)
-    :param mask: Tensor to determines which cell has obj
-    :return bbox: Tensor box (batch_size, grid_size, grid_size, 4)
-    """
-
-    x_offset, y_offset = cellbox[..., 0], cellbox[..., 1]
-    w_h = cellbox[..., 2:]
-
-    num_w_cells = x_offset.shape[-1]
-    num_h_cells = x_offset.shape[-2]
-
-    # w_cell_indices: [[0, 1, 2, ...], [0, 1, 2, ...], ...]
-    # Use w_cell_indices to convert x_offset of a particular grid cell
-    # location to x_center
-    w_cell_indices = np.array(range(num_w_cells))
-    w_cell_indices = np.broadcast_to(w_cell_indices, x_offset.shape[-2:])
-
-    # h_cell_indices: [[0, 0, 0, ...], [1, 1, 1, ...], [2, 2, 2, ...], ....]
-    # Use h_cell_indices to convert y_offset of a particular grid cell
-    # location to y_center
-    h_cell_indices = np.array(range(num_h_cells))
-    h_cell_indices = np.repeat(h_cell_indices, 7, 0).reshape(x_offset.shape[-2:])
-    #h_cell_indices = np.broadcast_to(h_cell_indices, x_offset.shape)
-
-    x_center = (x_offset + w_cell_indices) / num_w_cells
-    y_center = (y_offset + h_cell_indices) / num_h_cells
-
-    x_center *= mask
-    y_center *= mask
-
-    x_y = tf.stack([x_center, y_center], axis=-1)
-
-    bbox = tf.concat([x_y, w_h], axis=-1)
-
-    return bbox
-
-
-def convert_cellbox_to_corner_bbox(cellbox, mask):
-    """
-    Convert tensor box (x_offset, y_offset, w, h) to
-    corner bounding box (x_min, y_min, x_max, y_max)
-    :param cellbox: Tensor box (batch_size, grid_size, grid_size, 4)
-    :param mask: Tensor to determines which cell has obj
-    :return corner_bbox: Tensor box (batch_size, grid_size, grid_size, 4)
-    """
-
-    bbox = convert_cellbox_to_xywh(cellbox, mask)
-    x, y, w, h = bbox[..., 0], bbox[..., 1], bbox[..., 2], bbox[..., 3]
-
-    x_min = x - (w / 2)
-    y_min = y - (h / 2)
-    x_max = x + (w / 2)
-    y_max = y + (h / 2)
-
-    corner_box = tf.stack([x_min, y_min, x_max, y_max], axis=-1)
-
-    return corner_box
 
 
 def compute_xy_loss(target_xy, box1_xy, box2_xy, mask, best_iou):
