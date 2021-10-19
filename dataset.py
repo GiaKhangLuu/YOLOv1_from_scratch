@@ -5,11 +5,12 @@
 import numpy as np
 import pandas as pd
 import os
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from xml.etree import ElementTree
 import tensorflow as tf
 from tqdm import tqdm
 from functools import partial
+from utils import prepare_image
+from tensorflow.keras.preprocessing.image import load_img
 
 
 # ==============================================
@@ -41,19 +42,6 @@ def get_dataframe(file_dir):
     file_df = pd.DataFrame(pd.concat([img_file_series, annot_file_series], axis=1))
 
     return file_df
-
-
-def prepare_image(filename, input_shape):
-    """
-    Resize image to expected dimension, and opt. apply some random transformation.
-    :param filename: File name
-    :param input_shape: Shape expected by the model (image will be resize accordingly)
-    :return : 3D image array, pixel values from [0., 1.]
-    """
-
-    img = img_to_array(load_img(filename, target_size=input_shape)) / 255.
-
-    return img
 
 
 def convert_to_xywh(bboxes):

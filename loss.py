@@ -156,8 +156,8 @@ class YoloLoss(Loss):
 
         # Convert cell box to corner bbox to compute iou
         true_corner_bbox = convert_cellbox_to_corner_bbox(true_cellbox, true_obj)
-        pred_corner_bbox1 = convert_cellbox_to_corner_bbox(pred_cellbox1, true_obj)
-        pred_corner_bbox2 = convert_cellbox_to_corner_bbox(pred_cellbox2, true_obj)
+        pred_corner_bbox1 = convert_cellbox_to_corner_bbox(pred_cellbox1)
+        pred_corner_bbox2 = convert_cellbox_to_corner_bbox(pred_cellbox2)
 
         # Compute iou
         iou_box1 = iou(pred_corner_bbox1, true_corner_bbox)

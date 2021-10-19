@@ -179,6 +179,8 @@ class YoloV1(Model):
         self.yolo_output = YoloOutput(fv_shape=backbone_output, grid_size=self.S,
                                       num_boxes=self.B, num_classes=self.C)
 
+        self.build(input_shape=(None, *input_shape))
+
     def call(self, inputs, training=False):
         """
         Call the model

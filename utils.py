@@ -3,7 +3,9 @@
 # ====================================
 
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import numpy as np
+import cv2
 
 
 # ====================================
@@ -128,6 +130,51 @@ def post_process_tensor_output(pred_tensor_output):
 
     boxes, scores, classes, nums = tf.image.combined_non_max_suppression(boxes, scores, max_output_size_per_class=10,
                                                                          max_total_size=49, iou_threshold=0.5,
-                                                                         score_threshold=0.2)
+                                                                         score_threshold=0.5)
 
     return boxes, scores, classes, nums
+
+
+def draw_output(img, output, label_names):
+    """
+    Draw bounding box and label name on image
+    :param img: Ndarray type image to draw
+    :param output: Tuple of prediction (boxes, scores, classes, nums)
+    :param label_names: List of label names
+    :return img: Image has been drew
+    """
+
+    boxes, scores, classes, nums = output
+    #img_wh = np.flip(img.shape[0:2])
+    img_hw = img.shape[0:2]
+
+    for i in range(nums):
+
+
+        #x1y1 = tuple((boxes[i, :2].numpy() * img_wh).astype(np.int32))
+        #x2y2 = tuple((boxes[i, 2:].numpy() * img_wh).astype(np.int32))
+        x1y1 = tuple(np.flip((boxes[i, :2].numpy() * img_hw).astype(np.int32)))
+        x2y2 = tuple(np.flip((boxes[i, 2:].numpy() * img_hw).astype(np.int32)))
+
+        # Draw bounding box
+        img = cv2.rectangle(img, x1y1, x2y2, (255, 0, 0), 2)
+
+        # Append label
+        img = cv2.putText(img, '{} {:.4f}'.format(label_names[int(classes[i])],
+                                                  scores[i]),
+                          x1y1, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
+
+    return img
+
+
+def prepare_image(filename, input_shape):
+    """
+    Resize image to expected dimension, and opt. apply some random transformation.
+    :param filename: File name
+    :param input_shape: Shape expected by the model (image will be resize accordingly)
+    :return : 3D image array, pixel values from [0., 1.]
+    """
+
+    img = img_to_array(load_img(filename, target_size=input_shape)) / 255.
+
+    return img
