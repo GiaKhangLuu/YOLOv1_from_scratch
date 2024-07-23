@@ -6,7 +6,7 @@ YOLOv1 paper: https://arxiv.org/abs/1506.02640
 
 ## **<span>&#x1F195;</span> YOLOv2 is released <span>&#x1F195;</span>**
 
-The YOLOv2 built from scratch is [here](https://github.com/GiaKhangLuu/YOLOv2_from_scratch)!!!. This new repository helps us to gain a deeper understand about how anchor boxes work and the way to define them.
+The YOLOv2 built from scratch is [here](https://github.com/GiaKhangLuu/YOLOv2_from_scratch)!!!. This new repository helps us increase knowledge of anchor boxes.
 
 # **Method and technique used in this project**
 
